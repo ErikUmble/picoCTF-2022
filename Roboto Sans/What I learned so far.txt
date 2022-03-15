@@ -1,0 +1,14 @@
+going to the robots.txt page, there is a message
+"""
+User-agent *
+Disallow: /cgi-bin/
+Think you have seen your flag or want to keep looking.
+
+ZmxhZzEudHh0;anMvbXlmaW
+anMvbXlmaWxlLnR4dA==
+svssshjweuiwl;oiho.bsvdaslejg
+Disallow: /wp-admin/
+"""
+
+the random-looking letters are base 64 for flag1.txtjs/myfif2זfRG@,z谖/u%z8r 
+so there must be some way of accessing this flag1.txt file

@@ -1,0 +1,18 @@
+I first decompressed the file with:
+	upx -d unpackme-upx
+and ran it with
+	./unpackme-upx
+seeing as it was taking an imput number and checking if it was the "favorite"
+I knew I'd need to see some of the assembly to find what the number it was
+being checked against was.
+so I opened the debugger with
+	gdb ./unpackme-upx
+
+and used
+	disass main
+to dissasemble the main function.
+just after a call to <__isoc99_scanf> I noticed the following instruction
+	0x0000000000401ef8 <+133>:   cmp    eax,0xb83cb
+so I guessed 0xb83cb must be the favorite number.
+Running the program again, and entering 754635 as the number, I recieved
+	picoCTF{up><_m3_f7w_e510a27f}

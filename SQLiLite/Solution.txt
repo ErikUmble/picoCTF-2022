@@ -1,0 +1,8 @@
+Seeing that the website printed the SQL command, I knew this was an SQL injection challenge
+my first try was just to set my username as:
+admin'; TABLES
+since I wanted to see the tables available,
+which also gave me the flag, in a hidden html tag
+By blocking the "AND WHERE password" section, the command did not care what was in the password field
+
+picoCTF{L00k5_l1k3_y0u_solv3d_it_d3c660ac}

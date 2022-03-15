@@ -1,0 +1,9 @@
+I spent nearly 2 hours trying this one, unsucessfully. 
+I know what needs to happen: since the vuln function uses get() with 
+a 128 byte buffer, we can pass a longer string which will begin overwriting 
+the memory beyond that buffer. Using gdb, I discovered the instruction address of the win function to be 0x00401530
+so we need to overwrite the buffer up to the return address section of the stack,
+and put the target address in that location so that after vuln executes, win will execute next.
+By inputting a long string after "Give me a string!", we can see some debugging info,
+stack trace, etc, which is probably necessary to solve the challenge, but 
+I'm not sure how yet.

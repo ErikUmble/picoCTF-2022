@@ -1,0 +1,8 @@
+After trying a random username and password, I noticed that the javascript file
+used to check the password simply uses an if statement:
+if( username === 'admin' && password === 'strongPassword098765' ) return true;
+so clearly
+username: admin
+password: strongPassword098765
+
+flag: picoCTF{j5_15_7r4n5p4r3n7_b0c2c9cb}

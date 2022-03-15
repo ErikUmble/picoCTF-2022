@@ -1,0 +1,6 @@
+Going off of the hint, I used 
+wget -m http://saturn.picoctf.net:50761/
+then simply used
+grep -r pico
+which found the following string
+picoCTF{1nsp3ti0n_0f_w3bpag3s_ec95fa49}

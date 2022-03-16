@@ -1,0 +1,29 @@
+I first found target address of win as: 0x08049296
+Then I tested different input lengths, with 107 bytes being the longest before
+segmentation fault; so I assumed the return address is the next 4 bytes,
+then we would have 4 bytes for arg1 and another 4 bytes for arg2.
+This did not work.
+
+Then with gdb, I added a breakpoint in vuln, just before the return.
+At the breakpoint, I used 
+	info frame
+to find that the return address was stored at 0xffffb6ec which normally holds
+0x08049348 to return to main, where it was called from.
+I looked at x/30x 0xffffb600 during the breakpoint for different runs with 
+longer and longer inputs, but none of them were changing it.
+x/10x $sp revealed that the input was getting added upward in memory, while 
+sp was at 0xffffb660, so we needed to go downward. So then I tried to instead
+overflow into main's return address.
+So I added another checkpoint in main, re-ran and checked the info frame
+and found that the eip = return address location is 0xffffb71c, so that is the 
+location I should be watching during the experiments.
+Then I ran again with input pwn.cyclic(512), and at the return address location,
+the value 0x62616170 was stored. So I checked pwn.cyclic_find(0x62616170) = 160
+realizing that the I'd need to send 159 junk bytes before the target address and
+arg1, arg2.
+This did not work. After some stack experiments, I think using 160 junk bytes would be better.
+
+I realized that the segmentation fault happening at the 108th byte was still a problem.
+This problematic memory pointer is at address is 0xffffb6e7
+So I checked what this value normally is using gdb, and it should be 0xffb70808
+So I tried repeating that byte sequence as the junk bytes, but got another error

@@ -1,0 +1,4 @@
+this was just an easy copy paste the message into
+https://www.dcode.fr/vigenere-cipher
+using the given key CYLAB
+picoCTF{D0NT_US3_V1G3N3R3_C1PH3R_d85729g7}

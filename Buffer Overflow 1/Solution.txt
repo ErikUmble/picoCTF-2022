@@ -1,0 +1,9 @@
+I first used gdb to get the target address for win, which is 0x080491f6
+Then, seeing as the buffer is size 32, I used an input of 
+"a"*32 + "abcdefghijklmnopqrstuvwxyz"
+then since the function returned to 0x70...6d, I knew that there were 12 bytes
+beyond the 32 byte buffer until the bytes for the return address began 
+(since a is 0x61 and 0x6d - 0x61 = 11)
+So I used pwn to send 
+"a".encode('utf-8')*(32+12) + p32(0x080491f6) 
+to the server, which then gave me the flag.

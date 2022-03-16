@@ -1,0 +1,9 @@
+Seeing as the prompt allowed psql commands, I looked up how to do the following:
+I used 
+	\d
+to see the tables available
+and 
+	SELECT * FROM flags;
+to get:
+
+picoCTF{L3arN_S0m3_5qL_t0d4Y_73b0678f}

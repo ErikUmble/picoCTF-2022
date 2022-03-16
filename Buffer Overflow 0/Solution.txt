@@ -1,0 +1,1 @@
+I simply overflowed the buffer with an input of many "a"s and it gave the flag.

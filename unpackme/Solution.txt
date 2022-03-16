@@ -16,3 +16,7 @@ just after a call to <__isoc99_scanf> I noticed the following instruction
 so I guessed 0xb83cb must be the favorite number.
 Running the program again, and entering 754635 as the number, I recieved
 	picoCTF{up><_m3_f7w_e510a27f}
+	
+	
+	
+For unpackme.py, I realized I could just edit the code to print(plain) and the flag was visible then.

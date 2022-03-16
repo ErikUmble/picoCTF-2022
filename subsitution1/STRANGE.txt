@@ -1,0 +1,3 @@
+Even though the decoded message seems fine, and the subsitution cipher 
+accurately maps all letters that appear in the flag, the server still
+rejects it. Maybe its a bug in the server?

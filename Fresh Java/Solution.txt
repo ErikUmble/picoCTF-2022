@@ -1,0 +1,4 @@
+I opened the .class file in Intellij,
+which automatically decompiled it. I copied the decompiled string into
+Decompiled.txt for some python help.
+Then I scripted reverse_eng.py to basically regex for the flag.

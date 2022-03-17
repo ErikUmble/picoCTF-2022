@@ -1,0 +1,5 @@
+It took me a while to figure out, but it was just a matter of using a relative
+path in the input region:
+	../../../../flag.txt
+which gave:
+picoCTF{7h3_p47h_70_5ucc355_e5a6fcbc}

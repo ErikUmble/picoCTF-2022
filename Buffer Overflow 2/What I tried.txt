@@ -33,6 +33,10 @@ So I tried repeating that byte sequence as the junk bytes, but got another error
 This answer is helpful:
 https://reverseengineering.stackexchange.com/questions/13928/managing-inputs-for-payload-injection
 
+This might help"
+https://tcode2k16.github.io/blog/posts/picoctf-2018-writeup/binary-exploitation/#buffer-overflow-3
+It lookes like they basically reused the buffer overflow challenge series from 2018, so maybe use this as a guide. 
+
 especially:
 	(gdb) run < <(echo -ne "\xef\xbe\xad\xde")
 and:

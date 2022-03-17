@@ -1,0 +1,23 @@
+I first downloaded and unziped the disk image with gunzip
+then I tried 
+	fls disk.flag.img
+to look for the files on the disk, but it said it didn't 
+recognize disk system. So I used
+	mmls disk.flag.img
+to see the disk structure, and there were 4 partitions, the first being unallocated.
+I tried the first linux one with
+	fls disk.flag.img -o 2048
+which didn't have any interesting-looking files. I tried
+	fls -r disk.flag.img -o 2048
+for recursive search, but it didn't find anything else. So I then tried the next partition
+	fls -r disk.flag.img -o 206848
+but it was an unrecognized system. So I tried the last Linux partition with
+	fls -r disk.flag.img -o 360448
+this had many files, so I used 
+	fls -r disk.flag.img -o 360448 | grep flag
+to find two files with flag in their names. I tried opening the first with
+	icat disk.flag.img -0 360448 2082
+and then the second with 
+	icat disk.flag.img -0 360448 2371
+which had the flag:
+picoCTF{by73_5urf3r_adac6cb4}

@@ -1,0 +1,4 @@
+Just a matter of using
+https://www.dcode.fr/rail-fence-cipher
+and setting keep punctuation and spacing,
+and 4 rows

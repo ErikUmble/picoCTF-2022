@@ -1,0 +1,7 @@
+I simply downloaded the .tar file, extracted it with
+	tar -xvf leak.tar
+looked through it, and noticed that cultiris was at row 378
+that corresponding row of passwords.txt looked suspiciously like rot13,
+and sure enough:
+
+picoCTF{C7r1F_54V35_71M3}

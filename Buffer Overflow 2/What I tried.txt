@@ -27,3 +27,15 @@ I realized that the segmentation fault happening at the 108th byte was still a p
 This problematic memory pointer is at address is 0xffffb6e7
 So I checked what this value normally is using gdb, and it should be 0xffb70808
 So I tried repeating that byte sequence as the junk bytes, but got another error
+
+
+
+This answer is helpful:
+https://reverseengineering.stackexchange.com/questions/13928/managing-inputs-for-payload-injection
+
+especially:
+	(gdb) run < <(echo -ne "\xef\xbe\xad\xde")
+and:
+	echo -ne "\xef\xbe\xad\xde" | nc -vv localhost 666
+and (to keep stdin open): 
+	(echo -ne "\xef\xbe\xad\xde"; cat) | nc -vv localhost 666

@@ -1,0 +1,42 @@
+Because of the prompt, my initial idea was to try to turn the computation
+of the recursive function into a matrix power. My linear algebra is a sorta
+rusty, so it took me a little while of playing around with function before 
+I realized the matrix form of it. Basically, since to compute my_func(i)
+we need my_func of i-1, i-2, i-3, and i-4; we will be working in R4 and the 
+vector x_i holds the computation [my_func(i), my_func(i-1), my_func(i-2), my_func(i-3)]
+so we can compute x_i+1 as a matrix product with x_i.
+Specifically, the matrix is
+	
+		[[0, 1, 0, 0],
+	M = 	 [0, 0, 1, 0],
+		 [0, 0, 0, 1],
+		 [a, b, c, d]]
+where the top 3 rows simply shift the buffer of remembered computations,
+and a = 55692, b = -9549, c = 301, d = 21
+and to deal with the base case, this only starts working for x_4
+where x_4 = M*x_3 where x_3 = [1, 2, 3, 4] as a column vector.
+then we can have x_5 = M*x_4 = M^2 * x_3;
+x_6 = M*x_5 = M^3 * x_3; 
+x_n = M^(n-3) * x_3.
+
+so to compute x_128, as we need for the program, we just need to find
+M^(125) and multiply x_3 by that. This is much easier if we diagonalize the 
+matrix, so I then went to Wolfram Alpha to save a bit of time. 
+I then imported numpy and added the S, J, S_inv matrices to m_func.
+
+This theoretically should have worked, but the numbers were getting to big for python
+to keep track of them as floats. So I changed the J exponentiation to do power modulo,
+but the final value was still to big.
+
+I think the problem is that S_inv contains a bunch of floats, so the product
+(J^big_number) * S_inv doesn't work since the big_numbers must stay ints.
+So I think I will have to manually type out that multiplication, and use
+integer divide rather than the regular. I just might have to add a small number
+on to the result before returning, in case we lost data.
+
+That didn't work.
+
+I tried several other things, but overflow kept occuring due to using numpy.
+If I implemented the matrix multiplication in native python myself, it wouldn't
+overflow, but it also might take much longer. This might be my only option though.
+

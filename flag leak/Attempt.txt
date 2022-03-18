@@ -1,0 +1,90 @@
+I first read up on printf vulnerabilities 
+(https://web.ecs.syr.edu/~wedu/Teaching/cis643/LectureNotes_New/Format_String.pdf)
+and learned specifically:
+%s takes the next element from the stack, treats it as an address, and print the string found at that address
+%x advances the stack pointer
+%n takes the next element from the stack, treats it as an address, and writes the number of characters printed so far to that address
+
+So the basic exploit seems to be:
+find the target address of function we want to run
+find the location storing the return address of vuln
+first part of input is a byte sequence of the address we will overwrite (where return address is stored)
+use %x to move the stack pointer to just before our printf data is stored (so that the next item on the stack is the address we will write to)
+then print enough characters such that the total number printed = target address
+finally use a %n to write that target address value to the return address location
+
+I used gdb to figure these things out:
+target address: 0x080492b6
+on a normal case run
+	vuln eip = 0x80493bd
+	saved eip = 0x8049418 (this is the value of address that vuln returns to)
+	address 0xffffb6fc stores that return address value
+I used an input of aaaabbbbccccddddeeeeffffgggg
+to determine:
+	input gets stored starting at 0xffffb630
+I then used (gdb) run < <(echo -ne "\xef\xbe\xad\xde")
+to ensure that I was able to send a byte string to the correct place.
+next I used the byte string (gdb) run < <(echo -ne "\xfc\xb6\xff\xff")
+to put the address to overwrite at the first position of the input storage region
+
+I just noticed that the value at address 0xffffb624 was 0xffffb630, the first
+address of the stored input. So am guessing (based on the diagram in the pdf) that I will need 4 %x and one %n
+So now it's just a matter of inputting 0x080492b6 characters before the %n, but I'm not sure if it will even let me do this)
+Just a bit more playing around for familiarity:
+run < <(echo -ne "aaaa%x%x%x%x") prints out aaaaffffb630ffffb650804934661616161
+where the last 4 bytes are exactly from the aaaa pulled off the stack
+
+To make sure I was overwritting the right location, I then tried
+run < <(echo -ne "\xfc\xb6\xff\xff%x%x%x%n")
+
+I then tried
+run < <(echo -ne "\xfc\xb6\xff\xff%x%x%x%134517430x%n")
+which took a while of printing out that massive number of characters
+and I think (based on the previous experimentation, that only 3 %x should be used,
+and the third one should print as many digits as target_addr - 12, since we will have already printed 12 by that time
+so
+run < <(echo -ne "\xfc\xb6\xff\xff%x%x%134517424x%n")
+I tried
+(echo -ne  "\xfc\xb6\xff\xff%x%x%134517424x%n"; cat) | nc -vv saturn.picoctf.net 54651
+but the webshell didn't like me doing it; it is just way to many characters.
+
+So then I continued research and discovered this: 
+https://codearcana.com/posts/2013/05/02/introduction-to-format-string-exploits.html
+Specifically, the idea of writing the higher order 4 bits of the target address
+to the overwrite address first, then the lower order 4 bits; since this way we 
+won't have to print as many characters. 
+This means using %10$hn to write to the higher order 2 bytes
+and %11$hn to write to the lower order 2 bytes
+We also have to now start our input with 8 bytes, the first 4 for the address 
+of the higher two bytes of the overwrite address, and the next 4 for the address
+of the lower two bytes of the overwrite address.
+
+So the input will begin with "\xfe\xb6\xff\xff\xfc\xb6\xff\xff" (note: it is the same 4 bytes repeated, except the first byte which is increased by 2)
+
+Just as a test, I ran
+	run < <(echo -ne "\xfe\xb6\xff\xff\xfc\xb6\xff\xff%10$hn%11$hn")
+The result was not what I was expecting, so maybe something was wrong. I also 
+tried removing the 10$ and 11$, but no matter what, it just kept overwriting the wrong memory address
+(edit: later I realized that this was because in that most recent command, I forgot to include the three %x )
+
+Then, I realized that the higher order 2 bytes of the target address (0x0804) 
+was already in the overwrite address, so I only needed to change the lower order
+2 bytes; writing 0x92b6 = 37558 to that location.
+run < <(echo -ne "\xfc\xb6\xff\xff%x%x%x%hn")
+That command let me change just the lower order bytes of the overwrite location. Perfect!
+Now I just need to add padd the third %x with 37558 - 4 - 8 - 8 = 37538
+So I ran
+	run < <(echo -ne "\xfc\xb6\xff\xff%x%x%37538x%hn")
+Which returned to readflag() after vuln, as desired.
+
+The only problem is that readflag takes a couple arguments; and does not 
+print the flag by itself. Vuln creates a buffer the same size as the flag,
+so I know I need to pass that as one of the arguments, and I think pass 64 as the other,
+and then somehow print the contents of that buffer.
+I think this may have just escalated in complexity, but I'm wondering if maybe
+I'm supossed to replace the call to putchar, or even somehow dynamically add
+code to the readflag, so that it also prints it.
+
+Another possibility would be to reroute readflag()'s return to go to the beginning
+of vuln(), so that we would have another printf exploit available, and print the flag buffer in that one.
+I've been trying this for the past 6 hours, so I'll take a break and come back later.

@@ -1,0 +1,22 @@
+With 
+	fls -r disk.img -o 206848 | grep key
+I found a bunch of potential key files. 
+I tried the ssh_host_rsa_key.pub with
+	icat disk.img -o 206848 22 > key_file
+and then running the ssh command
+but I do not know what the password is, to enter on the shh prompt.
+I looked for password files on the disk, but could not find anything useful
+in any of them.
+There are other ssh_host public key files, which could be worth trying,
+but it seems like no matter what, I'm asked for a password after ssh command,
+so I think we need to figure out what the password is.
+
+Ok, I think it should be possible to use the public key instead of the password,
+but nothing I've tried so far has worked. It might be necessary to try each of 
+the various ssh_host keys available on the disk. I also might not have 
+authorized_keys file configured correctly.
+I tried setting
+ PasswordAuthentication no
+in sshd_config,
+but it still asked for a password. Maybe I should try it with ssh_config
+I also don't know if those files should be in .ssh/ or not.

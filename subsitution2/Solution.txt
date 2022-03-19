@@ -1,0 +1,6 @@
+I used essentially the same procedure as with subsitution1,
+reusing the python file, and just recreating the dictionary char_map.
+I changed it slightly to put dashes in place of unkown chars, which made it easier to see words beginning to form.
+I started the char_map with the picoCTF chars, and from there, I could make out competition in a few places, so I added m, e, and n.
+Then I saw science, and primarily. 
+I stopped there, since the flag had no more dashes, so no more decoding was necessary.

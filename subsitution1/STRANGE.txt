@@ -1,3 +1,7 @@
 Even though the decoded message seems fine, and the subsitution cipher 
 accurately maps all letters that appear in the flag, the server still
 rejects it. Maybe its a bug in the server?
+
+So I figured out the problem. Somehow, the first 3 in FR3QU3NCY had gotten changed into a 4 (maybe I accidently did it).
+I re-downloaded the message and compared, and spotted the change. Switching it to a 3 yielded the flag
+picoCTF{FR3QU3NCY_4774CK5_4R3_C001_7AA384BC}

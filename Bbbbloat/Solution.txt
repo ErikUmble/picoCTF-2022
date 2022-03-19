@@ -1,0 +1,8 @@
+I used objdump to look at the assembly (since gdb didn't recognize the obfuscation).
+	objdump -M intel -d bbbbloat | grep scan
+pointed out where the scanf was being called.
+then I just looked and shortly after it was called there was a
+	cmp eax, 0x86187
+	jne, ...
+so I just tried entering 549255 as favorite number. and it worked.
+picoCTF{cu7_7h3_bl047_695036e3}

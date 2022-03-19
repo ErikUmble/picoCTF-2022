@@ -1,0 +1,6 @@
+I worked my way through the usual series of websites/tools.
+I found a helpful list of these to try here: https://fareedfauzi.gitbook.io/ctf-checklist-for-beginner/steganography
+upon trying
+zsteg -a pico.flag.png
+I got
+picoCTF{7h3r3_15_n0_5p00n_a1062667}

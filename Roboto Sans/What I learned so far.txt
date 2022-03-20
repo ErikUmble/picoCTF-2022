@@ -12,3 +12,10 @@ Disallow: /wp-admin/
 
 the random-looking letters are base 64 for flag1.txtjs/myfif2זfRG@,z谖/u%z8r 
 so there must be some way of accessing this flag1.txt file
+
+I also tried 
+wget -m http://saturn.picoctf.net:51108/
+so as to grep -r search for things, but I couldn't find out any more than the above.
+
+At this point, I think things are pointing to somehow accessing cgi-bin, and maybe the flag is in it somehow.
+The Roboto Sans challenge title hints at the thing banned by robots.txt, and the base64 message in it hints at a flag1.txt

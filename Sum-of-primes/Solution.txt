@@ -1,0 +1,23 @@
+A quick web search revealed this:
+supposing 
+b = p + q 
+n = p*q
+then 
+(x-p)*(x-q) = x^2 -bx + n
+the roots of which are p and q
+so p = b/2 + sqrt((b^2 - 4*n))/2
+and d = b/2 - sqrt((b^2 - 4*n))/2
+
+Even easier,
+φ(n)=(p−1)(q−1)=pq−p−q+1=pq−(p+q)+1=n−b+1
+
+This didn't work, and I suspect it has to do with the fact that
+gen.py uses d = pow(e, -1, m) where m = lcm(p-1, q-1) instead of phi= (p-1)*(q-1).
+Nvm, that actually shouldn't matter.
+It's just strange that the output does not correspond to ascii.
+
+Oh, I realized my mistake, when selecting b to copy and past it from output.txt,
+I accidently left off the first two digits. Now it works as expected using the 
+totient.
+
+picoCTF{24929c45}

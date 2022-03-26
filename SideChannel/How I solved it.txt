@@ -1,0 +1,33 @@
+I think I'll try to replicate the code found here: https://tildeho.me/hack-around-the-clock-introduction-to-timing-attacks/
+Rn, pwntools isn't working for me to generate a template for it, so I'll try later.
+Oh, I realized this is because pin_checker lacks section headers.
+
+I think I can measure execution time of the pin check in linux with the bash script
+	START=$(date +%s.%N)
+	echo 8_char_password | ./pin_checker
+	END=$(date +%s.%N)
+	DIFF=$(echo "$END - $START" | bc)
+	echo $DIFF
+
+I made this script file, and tried it manually a few times, and noticed that when the 
+first digit is 4, the time takes twice as long, so I am assuming 4 is the first digit.
+It would be nice to automate this for the other 7 digits, but my bash scripting is 
+rusty, so I will instead learn how to run the command from a python script.
+A quick google search indicates this won't be too hard, just need to use
+stream = os.popen("command...")
+output = stream.read()
+
+
+I wrote up the script and ran it, but it did not produce the correct pin, and multiple 
+runs produce very inconsistent results. It is nearly always saying that 0 should be
+the first digit, which makes sense, but many of the digits change drastically from
+run to run. I wonder if it has anything to do with the fact that I'm using cs50 IDE.
+Maybe the timing is inconsistent due to the machine. I tried on both the webshell
+and my ubantu, but neither linux platform was able to run the pin_checker binary file.
+
+I could try having python check for access before suggesting the pin. I added this,
+and also realized a bug. I had to run it several times to fix several bugs, but it
+didn't take very long to try enough "likely" pins before it found one that granted 
+access. It found 48390513, which works and yielded
+picoCTF{t1m1ng_4tt4ck_eb4d7efb}
+on the master server.

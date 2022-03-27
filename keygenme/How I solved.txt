@@ -1,0 +1,43 @@
+Sadly, gdb doesn't work for this file.
+I downloaded ghidra to work it instead.
+
+It looks like FUN_0010148b(void) is main(void)
+and it calls FUN_00101209 to check the key.
+
+and I can deduce from FUN_00101209 that the key must be length 0x24.
+The rest of the function seems kinda cryptic.
+I tried copying it and pasting it into a new c file, to try to print acStack56, which
+looks to contain the key.
+This has potential, I'll keep trying with it.
+
+I finally fixed all the errors in the decompiled c function, but it meant I had
+to initialize several char variables to the first several leters of the alphabet,
+the resulting key, picoCTF{˱ݎ]EBBfDEAC}, just depends on those variables, so I now
+need to figure out what they would have been in the actual program.
+
+I installed radare2, and will try to learn how to use it for some dynamic analysis;
+even if it turns out not to be useful for this challenge, the hints suggests it 
+for Wizzardlike, so I will need to know how to use it anyway. 
+
+I was able to make out the following in the hex dump
+picoCTF{br1ng_y0ur_0wn_k3y}
+but it is not the complete flag. I think there must be something missing from it
+
+I then tried to just use the debugger and step through the program. Once in the 
+key checking function, I noticed the key being built on the stack, and here it is:
+picoCTF{br1ng_y0ur_0wn_k3y_abb48a6c}
+
+Stuff I learned:
+to debug in radare2, use
+r2 -d pathtofile/filename
+>aaa
+>afl
+that last command shows the functions; aaa is necessary to analyze for the functions.
+
+use capital V <enter> to enter visual mode, and lowercase p to cycle through the views
+in that mode. One of the views shows the stack and instructions about to be executed.
+Use f7 to step into (execute next instruction, entering a function if it is a call), and 
+f8 to step over (executes the call instruction and what it called, and leaves you
+right after the return.
+while in visual mode, use : to enter commands. For example, :ds 10 will step 10.
+You have to use V again after executing : commands. 

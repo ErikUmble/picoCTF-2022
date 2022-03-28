@@ -1,0 +1,23 @@
+I'm guessing, as with the other Buffer Overflows in the series, that it will be
+an almost identical challenge and exploit as in the 2018 competition, so I read what
+this guy did on https://tcode2k16.github.io/blog/posts/picoctf-2018-writeup/binary-exploitation/#buffer-overflow-3
+
+Just to figure things out a bit myself, I noticed that the global_canaries size 
+is 4 bytes, so I made a canary.txt with dead as the contents, to easily notice
+where in memory the canary gets stored (I realized later that this would not produce the 
+hex 0xdead in the mem location, but 0x64616564 was easy enough to spot).
+As usual, I first used gdb to find the target address of win(), which is 0x08049336.
+I also set a breakpoint in vuln, at 0x08049521, just after input is read.
+
+I then ran it with a simple 2 byte input of aa
+and checked info frame at the checkpoint, which had eip at 0xffffb6ec.
+Looking at the memory of the stack with 
+x/50x 0xffffb66c
+I noticed that the input buffer starts at 0xffffb698, and the canary is stored
+in 0xffffb6d8, so after the canary, there are 4 words (16 bytes) 
+before the return address, and 16 words (64 bytes) of input buffer before the canary.
+
+So the only difference between the 2018 version and the 2020 one is the target 
+address, and the size of the buffer. I simply made those few modifications to the
+code, as well as converting it to python3, and got the flag.
+picoCTF{Stat1C_c4n4r13s_4R3_b4D_10a64ab3}

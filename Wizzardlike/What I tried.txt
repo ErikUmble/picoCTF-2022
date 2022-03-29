@@ -1,0 +1,132 @@
+First, I ran the game a couple times to see what it is like. I could get to several floors down,
+but no place else. I also tried hitting other keys than the ones in the specification, in case there
+was an easter egg there. I'm guessing there is some movement trick, or something that the hint about 
+teleporting anywhere hints at.
+Just in case, I tried strings game | grep pico, but it didn't produce anything.
+I then opened this in ghidra, and noticed what is probably main is FUN_0010185b, and renamed this to main.
+I also found that a function called often seemed to be setting a bunch of array values to 0, and 
+assuming that had to do with clearing the visible play area, I renamed that function clear_stuff.
+I proceeded to rename as much as I could (as I figured out what things did) to get a better understanding
+of the code, and look for exploits. I didn't find any, but I based on the hint, I figured I needed to do 
+some dynamic analysis with radare2, so I fired that up next. 
+I noticed in the disassembly of main, that it checks rax to know which floor we are on, so I set a breakpoint 
+on the line where it begins to be checked, with `db 0x7fb9c7c25934` (though this address changed each reloaded 
+debug time), so that I could change rax with
+dr rax = 0xfloor_num to get to whichever floor I wanted. This didn't have the effect I was hoping for,
+it just kept taking me to the regular floors. 
+Oh, now I realize, it is because there is a variable that is being loaded into rax before each compare,
+so I either have to keep changing rax and stepping, or change that variable's memory value. 
+In the instance I was running it, the address of this variable was 0x7fcb812cfe7c,
+so I used `wv 0xfloor_num @ 0x7f784d511e7c` (note that floor_copy is at address 4 less than that) to set it at the checkpoint. 
+I can use `px 8 @ 0x7f784d511e78` to then see both values.
+I set floor_copy to 0x4, and floor to 0x5, to get to the 5th floor, but there is no exit to this floor, so I had
+to start over and try the next floor.
+I tried floor 6, which didn't have a flag, but did have a down starirway at the bottom, so I could get to 7.
+But floor 7 was useless, and no exit. So I tried again, to floor 8.
+Floor 8 is small, and with just a single up stairway, so I used the breakpoit at it to override and goto floor 9.
+There is a massive gap in floor 9, but I spawned right next to the up stairway, so I used the breakpoint again
+to goto floor 10. Weirdly, floor 10 was tiny, and a single movement took me to a stair, which confusingly
+(according to the stack and registers) implied I was going to 10 from 9, so I just took it without override.
+The next "10" was differnt, but a single down step took me to another stair (which seemed to lead to floor f). 
+A movement from f took me to 9, then a movement again took me to e, then to d, then to 9, ...
+I think I realized what is happening; since there are only 10 floors, when it says I'm on floor d,e,f, etc, it 
+is just not changing the floor map, so it is still showing the map for 9/10, and so it has the same stairways 
+as those floors.
+Now I am just stuck on c. Any movement takes me to a stairway that also goes to c, so I can use the breakpoint to
+get out, but I'm wondering where the flag is, since I've been to every level.
+I have another idea: since on one of the first levels, there was an area that I couldn't reach by walking, maybe I should
+try to get there. I tried teleporting to get to 4 as though from 5, but it was not helpful.
+
+Just as a note of how I got this teleportation to work:
+$ r2 -d ./game
+> aaa
+> pdf @ main
+# then I searched the main function for the "cmp eax, 1" just above the second massive string embedded,
+# noted the address of "mv eax, dword [floor_var_addr]"; suppose this instruction is at 0x7f88e883992e.
+> db 0x7f88e883992e
+> dc
+# move around as usual until hitting the downstairs of floor 1
+breakpoint > V
+# use `p` `p` the first time, to cycle to the debug view
+# in visual mode, I can see the instruction with floor_var_addr and use : to enter the following commands
+:> wv 0xfloor_num @ floor_var_addr
+# can also change spawn coordinates at this point in a similar way, but must first step
+# until just after the hard-coded values are loaded in
+:> <enter>
+'q'
+# the <enter> followed by q, exits visual mode in the cleanest way, without messing up the game board.
+> dc
+# I then plan the route to take in that new floor, and give the char commands each followed by <enter>
+# and cannot see where the player is, but once it reaches a stair, the breakpoint is reached, and another
+# teleport is possible 
+
+I then teleported to 9, and took the stair to 8, then took the stair to 7, then to 6, then to 5, to 4, 3, 2, and 1,
+but still nothing interesting. I might need to figure more out from ghidra to know where to be looking. I think
+there may be a way to specify spawn coordinates for where a stairway takes the player, so this might be useful
+for getting to the inaccessable regions.
+
+I noticed that the player position is simply set soon after the floor cmp determines which floor we are on, 
+so it should not be difficult to change. But before that, I realized a mistake I made earlier; I used the 
+breakpoint to get to floor 0x10, thinking I was going to 10, which is why the downstair took me to 0xf.
+So I will first try going to 0xa, then try messing with the starting position. The actual floor 10 does not seem
+too interesting, but it is long. 
+Conviniently, the variable addresses have it so that [x_pos, y_pos, floor_copy, floor] is a block of 16 bytes
+in memory, so I can quickly review them and change them. By default, floor 4 spawns player at (x, y) = (2, 1),
+and I want to get to the other half of that floor, so I tried to spawn at (6, 1). This didn't work as expected,
+and the program seemed to not continue working. I tried (10, 0) and this seemed to take me to the other
+side of the floor, but the stairway had disapeared.
+
+I teleported to 10 again, and walked back up through the floors to see which ones would be interesting to try
+different coordinates at. 9 has a massive gap that would be hard to guess how large x should be to cross it,
+maybe 40/50, but no stairs there, so would be a one shot mission. 8 has an unreachable region easily at (0, 4),
+but also no stairs there. I could try (3, 10=0xa) on 7. (5, 11=0xb) should be a stairway (that is otherwise unreachable) 
+on floor 6. 5 is kinda wierd; it looks like just a rectangle, but I could go to (7, 1) just to check. (13=0xd, 4)
+should be an unreachable stairway on floor 4. I still don't really know what I'm looking for, but I'll try those
+stairs on 4 and 6 first and see if anything interesting happens. The problem with teleporting is that afterwards,
+the chars I enter get placed on the board and it is difficult to see what is going on, so I wonder if it would 
+be better to add a breakpoint in the startup code, just after the initial floor is assigned, or if this would
+just ruin keyboard input anyway; I'll try this next if nothing interesting comes from the coordinate teleporation.
+I teleported to (5, 11) on 6, but the stairway had disappeared. But I chose to teleport back to the regular
+spawn of 6, and found that I could actually reach the stair way this time with the command sequence 
+w, a, a, s*11, d*5. This took me to 7. I then tried 4 at (13, 4). It worked this time, and 2 d movements took
+me to the down stairway to 5, but this didn't end up giving me anything. 
+
+I think I need to search in ghidra some more, for which floor the flag should be in, or at least for any clues
+as to what I should do in the game. I noticed that it looks like x_diff and y_diff
+are set to 0 upon entering a floor, but I do not see where they are ever changed from that
+(edit: they get changed in the mv functions, but only if x_pos is within a certain variable range).
+I also noticed that there are two map arrays, one (I call "map") is only ever written to
+by add_stuff, when a new floor is loaded, and this is checked for valid positions and 
+position information. Another (I call "map_view" seems to be the thing shown on the screen).
+I can't understand what FUN_00101332 does, and it might be important. It seems to
+check the map for certain ranges, based on the parameters, and returns 0 if # is found on
+the map in that region around the coordinate, and 1 otherwise. (edit: I think I realized
+what it does, and renamed it isvisible_location(). It seems to implement a sort of 
+ray-tracing, to determine if a location is visible or blocked from player's view by walls.
+
+Thinking that one of the floor map displays might hold the flag, I copied the floor strings
+from `pdf @ main` into the python script and examined the maps, but the only thing I noticed 
+was that it seemed like several of the maps have two "modes" one of which has the 
+stairways, and the other doesn't.
+I noticed that in the main function code, floor 10 is the only one that uses a variable 
+string map; so something might be different about it, but it seems to just be an up stairway
+followed by a row of floord dots, and the rest of it is walls.
+I also noticed that floor 1 is slightly different from the floor 0 that is initially loaded, so going to a different
+floor and returning to 1 does change things.
+
+I might just have to try and explore everything. I next tried (0, 4) on 8, but it just seemed glitchy, though
+I managed to get back to a stairway. (3, 0xa) just got me trapped in 7. I then tried (0xa, 3) on floor 1, which 
+revealed a little more of the map, but got me trapped.
+
+I finally think I realized the problem I had been having with characters typed being displayed on the map, which is because
+noecho() is only called once in main just before the while loop. If after the floor loads, I change
+rip to point to the noecho call instruction, the game should be more playable. In this instance, the call
+is at 0x7fe704cdd906, and the usual breakpoint spot is at 0x7fe704cdd92e. I tried this, and it didn't seem to work,
+so I'm not sure how to do it.
+
+I just noticed that floor 0 gets loaded then cleared immediately from map_view. Not sure if this is 
+suspicious, or just an implementation detail. 
+
+I feel like I've looked everywhere and have not found even a single hint of a flag. I'm not even sure
+how a flag could be hidden here, since the floor strings don't contain one, and there does not seem to be
+any flag references in the code, but I might still be missing something.

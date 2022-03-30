@@ -1,0 +1,6 @@
+After reading a solution writeup, I realized the simple mistake I made in the floor_map_display.py.
+Since the string lengths were all over 20000, I thought I should print rows of length 200, while the game
+actually used row length of 100. This small change to the script now has it printing the correct floor maps
+which contain the flag. But while I could make out picoCTF{ur_4_w1z4rd_1496299}, I think there needs to be one
+more digit in the flag, but none of my tries have been successful. I tried increasing the number of rows printed
+to 100, as the game would have, but this did not reveal any more than 30.
